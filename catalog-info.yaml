@@ -1,11 +1,13 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: "test"
-  description: "test"
-  annotations:
-    gcp/cloudrun-service: "test"
+  name: monorepo-central-dispatcher
+  description: The central CI/CD routing brain for the monorepo
+  tags:
+    - tooling
+    - cloudbuild
+    - gcp
 spec:
   type: service
-  lifecycle: experimental
+  lifecycle: production
   owner: "group:default/guests"
