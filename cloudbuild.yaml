@@ -11,20 +11,19 @@ steps:
         # Fetch history to ensure we can diff against the previous commit
         git fetch --unshallow || true
         
-        # Get list of files changed in the latest commit, extract their root directories
         CHANGED_DIRS=$(git diff-tree --no-commit-id --name-only -r HEAD | awk -F/ '{print $1"/"$2}' | sort | uniq)
         
-        echo "Changed directories to inspect: $CHANGED_DIRS"
+        echo "Changed directories to inspect: $$CHANGED_DIRS"
         
-        for dir in $CHANGED_DIRS; do
-          if [ -d "$dir" ] && [ -f "$dir/cloudbuild.yaml" ]; then
+        for dir in $$CHANGED_DIRS; do
+          if [ -d "$$dir" ] && [ -f "$$dir/cloudbuild.yaml" ]; then
             echo "================================================="
-            echo "🚀 Launching dynamic Sub-Build for: $dir"
+            echo "🚀 Launching dynamic Sub-Build for: $$dir"
             echo "================================================="
             # Submit a build specifically using the sub-folder's configuration
-            gcloud builds submit $dir --config=$dir/cloudbuild.yaml
+            gcloud builds submit $$dir --config=$$dir/cloudbuild.yaml
           else
-            echo "Skipping $dir: Not a directory or no localized cloudbuild.yaml found."
+            echo "Skipping $$dir: Not a directory or no localized cloudbuild.yaml found."
           fi
         done
         
