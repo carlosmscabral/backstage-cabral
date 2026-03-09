@@ -3,17 +3,17 @@ steps:
   # It finds all directories changed in the last commit.
   # If a changed directory contains its own cloudbuild.yaml, it triggers a sub-build.
   # Step 1: Discover changed directories using the official git image.
-  # This uses the Cloud Build credential helper to fetch history for private repos.
   - name: 'gcr.io/cloud-builders/git'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        echo "Fetching repository history to diff against previous commits..."
-        git fetch --unshallow || true
+        echo "Calculating changed files from the current merge commit..."
         
-        # Get list of files changed in the latest commit, extract their root directories
-        CHANGED_DIRS=$$(git diff-tree --no-commit-id --name-only -r HEAD | awk -F/ '{print $$1"/"$$2}' | sort | uniq)
+        # In a shallow clone triggered by a PR merge, the HEAD commit is the merge commit itself.
+        # `git log -m -1 --name-only --pretty="format:" HEAD` lists exactly the files changed in this merge commit
+        # without needing to fetch older history.
+        CHANGED_DIRS=$$(git log -m -1 --name-only --pretty="format:" HEAD | awk -F/ '{if (NF>1) print $$1"/"$$2}' | sort | uniq | grep -v '^$$')
         
         echo "Changed directories detected:"
         echo "$$CHANGED_DIRS"
@@ -48,4 +48,3 @@ steps:
 
 options:
   logging: CLOUD_LOGGING_ONLY
-
