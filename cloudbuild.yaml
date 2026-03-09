@@ -40,7 +40,7 @@ steps:
             echo "🚀 Launching dynamic Sub-Build for: $$dir"
             echo "================================================="
             # Submit a build specifically using the sub-folder's configuration
-            gcloud builds submit $$dir --config=$$dir/cloudbuild.yaml --substitutions=COMMIT_SHA="$$COMMIT_SHA",BRANCH_NAME="$$BRANCH_NAME",REPO_NAME="$$REPO_NAME"
+            gcloud builds submit $$dir --config=$$dir/cloudbuild.yaml --substitutions=COMMIT_SHA="$$COMMIT_SHA"
           else
             if [ -n "$$dir" ]; then
               echo "Skipping $$dir: Not a directory or no localized cloudbuild.yaml found."
