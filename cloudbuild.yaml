@@ -2,18 +2,33 @@ steps:
   # This master pipeline runs on every PR merge to the main branch.
   # It finds all directories changed in the last commit.
   # If a changed directory contains its own cloudbuild.yaml, it triggers a sub-build.
+  # Step 1: Discover changed directories using the official git image.
+  # This uses the Cloud Build credential helper to fetch history for private repos.
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Fetching repository history to diff against previous commits..."
+        git fetch --unshallow || true
+        
+        # Get list of files changed in the latest commit, extract their root directories
+        CHANGED_DIRS=$$(git diff-tree --no-commit-id --name-only -r HEAD | awk -F/ '{print $$1"/"$$2}' | sort | uniq)
+        
+        echo "Changed directories detected:"
+        echo "$$CHANGED_DIRS"
+        
+        # Save to a workspace file to pass to the next step
+        echo "$$CHANGED_DIRS" > /workspace/changed_dirs.txt
+
+  # Step 2: Trigger sub-builds using the gcloud SDK image
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        echo "Detecting changed directories..."
-        # Fetch history to ensure we can diff against the previous commit
-        git fetch --unshallow || true
-        
-        CHANGED_DIRS=$(git diff-tree --no-commit-id --name-only -r HEAD | awk -F/ '{print $1"/"$2}' | sort | uniq)
-        
-        echo "Changed directories to inspect: $$CHANGED_DIRS"
+        CHANGED_DIRS=$$(cat /workspace/changed_dirs.txt)
+        echo "Directories to inspect: $$CHANGED_DIRS"
         
         for dir in $$CHANGED_DIRS; do
           if [ -d "$$dir" ] && [ -f "$$dir/cloudbuild.yaml" ]; then
@@ -23,7 +38,9 @@ steps:
             # Submit a build specifically using the sub-folder's configuration
             gcloud builds submit $$dir --config=$$dir/cloudbuild.yaml
           else
-            echo "Skipping $$dir: Not a directory or no localized cloudbuild.yaml found."
+            if [ -n "$$dir" ]; then
+              echo "Skipping $$dir: Not a directory or no localized cloudbuild.yaml found."
+            fi
           fi
         done
         
@@ -31,3 +48,4 @@ steps:
 
 options:
   logging: CLOUD_LOGGING_ONLY
+
