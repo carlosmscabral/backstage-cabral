@@ -9,7 +9,7 @@ app = FastAPI(
 )
 
 # Optional: You can load the bundled OpenAPI spec if you want to strictly use it,
-# but FastAPI generates its own docs out of the box...
+# but FastAPI generates its own docs out of the box....
 @app.get("/")
 def read_root():
     return {"message": "Hello from pet-do-cabral-api! Running strictly in Cloud Run."}
