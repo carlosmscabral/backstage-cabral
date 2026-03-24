@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "test2"
+  description: "test2"
+  tags:
+    - gcp
+    - fastapi
+spec:
+  type: service
+  lifecycle: experimental
+  owner: "group:default/guests"
